@@ -665,7 +665,7 @@
               <h2 style="font-size: 1.15rem; font-weight: 700;">System Storage</h2>
             </div>
             <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.5; margin-bottom: 16px;">
-              All data is saved in LocalStorage. You can backup or reset defaults anytime.
+              Your admin data is saved in LocalStorage. Shared Love Book links also contain the selected book data, so recipients can open them on another phone/browser.
             </p>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <button class="btn-admin-sec" id="exportBtn">📥 Export JSON</button>
@@ -771,10 +771,39 @@
 
     if (isRecipientMode) {
       document.getElementById('openAdminBtn').style.display = 'none';
+
+      /*
+       * SHARE-LINK FIX
+       * The old version only stored books in LocalStorage. That meant a link
+       * containing ?book=BOOK-XXXXXX could only work on the browser that created it.
+       * The new version also puts the book configuration into the URL as a
+       * URL-safe Base64 payload, so the recipient does not need LocalStorage.
+       */
+      const sharedData = urlParams.get('data');
+
+      function decodeSharedConfig(encoded) {
+        try {
+          if (!encoded) return null;
+          const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/');
+          const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
+          const binary = atob(padded);
+          const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+          const json = new TextDecoder().decode(bytes);
+          return JSON.parse(json);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      const sharedRecord = decodeSharedConfig(sharedData);
       const repo = BookStorage.getAll();
-      const target = repo[bookParam];
-      if (target && target.config) {
-        activeConfig = target.config;
+      const localTarget = repo[bookParam];
+
+      if (sharedRecord && sharedRecord.config) {
+        activeConfig = sharedRecord.config;
+      } else if (localTarget && localTarget.config) {
+        // Backward compatibility for books opened on the creator's browser.
+        activeConfig = localTarget.config;
       } else {
         document.getElementById('notFoundScreen').classList.add('active');
       }
@@ -1118,8 +1147,23 @@
     const openBookBtn = document.getElementById('openBookLinkBtn');
     const closeReadyBtn = document.getElementById('closeReadyModalBtn');
 
-    function buildUrl(bookId) {
-      return `${window.location.origin}${window.location.pathname}?book=${bookId}`;
+    function encodeSharedConfig(config) {
+      const json = JSON.stringify(config);
+      const bytes = new TextEncoder().encode(json);
+      let binary = '';
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+      }
+      return btoa(binary)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/g, '');
+    }
+
+    function buildUrl(bookId, config) {
+      const payload = encodeSharedConfig(config);
+      return `${window.location.origin}${window.location.pathname}?book=${encodeURIComponent(bookId)}&data=${payload}`;
     }
 
     document.getElementById('triggerCreateBookBtn').addEventListener('click', () => {
@@ -1132,7 +1176,7 @@
       };
 
       BookStorage.save(bookId, record);
-      const generatedUrl = buildUrl(bookId);
+      const generatedUrl = buildUrl(bookId, record.config);
       shareableInput.value = generatedUrl;
       openBookBtn.href = generatedUrl;
 
@@ -1161,7 +1205,7 @@
       }
 
       list.reverse().forEach(b => {
-        const bookUrl = buildUrl(b.id);
+        const bookUrl = buildUrl(b.id, b.config);
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td style="font-weight: 600; color: #fff;">${escapeHtml(b.name || 'Untitled')}</td>
