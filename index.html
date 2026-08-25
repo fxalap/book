@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Falling Love Letters ❤️</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       1. ZERO-LAG HARDWARE ACCELERATED BASE
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --bg-start: #0e0414;
+      --bg-end: #26072b;
+      --primary-color: #ff3377;
+      --heart-color: #ff2a6d;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0e0414;
+      background-image: radial-gradient(circle at 50% 30%, #1f0729 0%, var(--bg-start) 65%, var(--bg-end) 100%);
+      position: relative;
+    }
+
+    /* 60/120 FPS Pure Canvas */
+    #loveCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      display: block;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    /* Discreet Admin Trigger */
+    .admin-trigger-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 50;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .admin-trigger-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    /* Bottom Tap Hint */
+    .subtle-hint {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.35);
+      z-index: 10;
+      pointer-events: none;
+      letter-spacing: 0.5px;
+    }
+
+    /* 404 Screen */
+    .not-found-container {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0d0312;
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .not-found-container.active { display: flex; }
+
+    .not-found-card {
+      max-width: 420px;
+      background: rgba(30, 10, 36, 0.9);
+      border: 1px solid rgba(255, 105, 180, 0.25);
+      border-radius: 20px;
+      padding: 34px 24px;
+    }
+
+    .btn-romantic {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 26px;
+      background: linear-gradient(135deg, var(--primary-color), #d13bff);
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 16px;
+    }
+
+    /* ==========================================================================
+       2. ADMIN OVERLAY
+       ========================================================================== */
+    #adminWrapper {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 6, 20, 0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 500;
+      overflow-y: auto;
+      color: #f8fafc;
+    }
+
+    #adminWrapper.active { display: block; }
+
+    .login-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 3, 14, 0.96);
+      backdrop-filter: blur(12px);
+      z-index: 600;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-modal-overlay.active { display: flex; }
+
+    .login-card {
+      max-width: 380px;
+      width: 100%;
+      background: rgba(25, 12, 33, 0.95);
+      border: 1px solid rgba(255, 105, 180, 0.25);
+      border-radius: 20px;
+      padding: 34px 26px;
+      text-align: center;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .admin-navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(18, 7, 24, 0.95);
+      border-bottom: 1px solid rgba(255, 105, 180, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .admin-main {
+      max-width: 1250px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 18px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 24px;
+    }
+
+    .admin-tabs { display: flex; flex-direction: column; gap: 8px; }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .tab-btn.active {
+      background: rgba(25, 12, 33, 0.85);
+      border-color: rgba(255, 105, 180, 0.3);
+      color: #ff3377;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .master-action-banner {
+      background: linear-gradient(135deg, rgba(255, 51, 119, 0.15), rgba(168, 85, 247, 0.2));
+      border: 1px solid rgba(255, 105, 180, 0.35);
+      border-radius: 16px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .btn-create-book {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #ff2a6d, #ff6584);
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(255, 42, 109, 0.5);
+      white-space: nowrap;
+    }
+
+    .admin-card {
+      background: rgba(25, 12, 33, 0.8);
+      border: 1px solid rgba(255, 105, 180, 0.2);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .admin-card-header {
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .form-group { margin-bottom: 16px; text-align: left; }
+    .form-label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      text-transform: uppercase; margin-bottom: 6px; color: #94a3b8;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.92rem;
+    }
+
+    .btn-admin-pri {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #ff3377, #a855f7);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-admin-sec {
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-admin-danger {
+      padding: 8px 14px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 8px;
+      color: #fca5a5;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: #ff3377; }
+    .stat-label { font-size: 0.8rem; color: #94a3b8; }
+
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .data-table th {
+      padding: 10px 12px; font-size: 0.75rem; text-transform: uppercase;
+      color: #94a3b8; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .data-table td {
+      padding: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.9rem;
+    }
+
+    .btn-sm {
+      padding: 5px 10px; font-size: 0.78rem; border-radius: 6px;
+      border: none; cursor: pointer; text-decoration: none;
+    }
+
+    .btn-sm-delete { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    .btn-sm-copy { background: rgba(168, 85, 247, 0.25); color: #e9d5ff; }
+
+    .badge-id {
+      font-family: monospace; font-size: 0.82rem; padding: 3px 6px;
+      background: rgba(255, 255, 255, 0.08); border-radius: 4px; color: #ff99bb;
+    }
+
+    .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background-color: rgba(255, 255, 255, 0.2); transition: 0.2s; border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+      background-color: white; transition: 0.2s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #ff3377; }
+    input:checked + .slider:before { transform: translateX(18px); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .slider-row { display: flex; align-items: center; gap: 12px; }
+    .slider-input { flex: 1; accent-color: #ff3377; }
+    .slider-badge {
+      min-width: 40px; padding: 3px 6px; background: rgba(255, 255, 255, 0.08);
+      border-radius: 6px; font-size: 0.8rem; text-align: center;
+    }
+
+    .theme-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .theme-preset-btn {
+      padding: 6px 12px; background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px;
+      color: #fff; font-size: 0.78rem; cursor: pointer;
+    }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(8, 2, 11, 0.85);
+      backdrop-filter: blur(10px); z-index: 1000; display: flex;
+      align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; visibility: hidden; transition: opacity 0.2s ease;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+
+    .ready-modal-box {
+      background: #1a0824; border: 1px solid rgba(255, 105, 180, 0.35);
+      border-radius: 20px; max-width: 440px; width: 100%; padding: 30px 24px; text-align: center;
+    }
+
+    .link-display-box {
+      display: flex; gap: 8px; margin: 16px 0; background: rgba(0,0,0,0.4);
+      padding: 6px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+    }
+    .link-display-input {
+      flex: 1; background: transparent; border: none; color: #ff99bb;
+      font-family: monospace; font-size: 0.9rem; padding: 6px; outline: none;
+    }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: linear-gradient(135deg, #ff3377, #a855f7);
+      color: #fff; padding: 12px 22px; border-radius: 12px;
+      font-weight: 600; font-size: 0.9rem;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.25s ease; z-index: 10000;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 800px) {
+      .admin-main { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .master-action-banner { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Admin Button -->
+  <button class="admin-trigger-btn" id="openAdminBtn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+    Admin
+  </button>
+
+  <!-- Hardware-Accelerated Canvas -->
+  <canvas id="loveCanvas"></canvas>
+
+  <div class="subtle-hint">Tap anywhere to bloom hearts ❤️</div>
+
+  <!-- 404 Screen -->
+  <div class="not-found-container" id="notFoundScreen">
+    <div class="not-found-card">
+      <div style="font-size: 3rem; margin-bottom: 10px;">💔</div>
+      <h2 style="font-family: 'Cinzel', serif; font-size: 1.5rem; color: #ff99bb; margin-bottom: 8px;">Oops ❤️ Love Book Not Found</h2>
+      <p style="font-size: 0.88rem; color: rgba(255,255,255,0.7); line-height: 1.5;">The link might be expired or from another browser device.</p>
+      <button class="btn-romantic" onclick="window.location.href=window.location.pathname">Return to Stream ❤️</button>
+    </div>
+  </div>
+
+  <!-- Admin Login Modal -->
+  <div class="login-modal-overlay" id="loginModal">
+    <div class="login-card">
+      <button class="modal-close" id="closeLoginBtn">✕</button>
+      <div style="font-size: 2.2rem; margin-bottom: 6px;">🔐</div>
+      <h2 style="font-family: 'Cinzel', serif; font-size: 1.4rem; margin-bottom: 4px;">Admin Access</h2>
+      <p style="color: #94a3b8; font-size: 0.82rem; margin-bottom: 18px;">Default: <b>admin</b> / <b>love123</b></p>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="adminUser" class="form-input" placeholder="admin" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="adminPass" class="form-input" placeholder="love123" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-admin-pri" style="width: 100%; margin-top: 4px;">Unlock Dashboard ✨</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="adminWrapper">
+    <header class="admin-navbar">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.3rem;">❤️</span>
+        <h1 style="font-family: 'Cinzel', serif; font-size: 1.15rem; font-weight: 700;">Falling Love Letters Admin</h1>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="btn-admin-sec" id="closeAdminViewBtn">← Back to Screen</button>
+        <button class="btn-admin-danger" id="logoutAdminBtn">Logout</button>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <aside class="admin-tabs">
+        <button class="tab-btn active" data-tab="tab-messages">💌 Messages Manager</button>
+        <button class="tab-btn" data-tab="tab-books">📚 My Love Books</button>
+        <button class="tab-btn" data-tab="tab-animation">✨ Physics & Speed</button>
+        <button class="tab-btn" data-tab="tab-theme">🎨 Theme & Colors</button>
+        <button class="tab-btn" data-tab="tab-system">⚙️ Backup & Reset</button>
+      </aside>
+
+      <section class="admin-content">
+        <div class="master-action-banner">
+          <div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 2px;">Ready To Share Your Love? ❤️</h3>
+            <p style="font-size: 0.82rem; color: #94a3b8;">Package the falling words and colors into a personalized link.</p>
+          </div>
+          <button class="btn-create-book" id="triggerCreateBookBtn">CREATE LOVE BOOK LINK ❤️</button>
+        </div>
+
+        <!-- 1. MESSAGES MANAGER -->
+        <div class="tab-panel active" id="tab-messages">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h2 style="font-size: 1.15rem; font-weight: 700;">Add New Message / Name</h2>
+            </div>
+            <form id="addMessageForm" class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Message Text / Emoji</label>
+                <input type="text" id="newMsgText" class="form-input" placeholder="e.g. Always Yours Sarah 💖" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Font Size (px)</label>
+                <input type="number" id="newMsgSize" class="form-input" value="20" min="12" max="40">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Text Color</label>
+                <input type="color" id="newMsgColor" class="form-input" value="#ffffff" style="height: 42px; padding: 2px;">
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <button type="submit" class="btn-admin-pri">+ Add To Falling Sky</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h2 style="font-size: 1.15rem; font-weight: 700;">Active Falling Words</h2>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Message</th>
+                    <th>Size</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="messageTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. MY BOOKS -->
+        <div class="tab-panel" id="tab-books">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value" id="statTotalBooks">0</div>
+              <div class="stat-label">Total Books Created</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statActiveMsg">0</div>
+              <div class="stat-label">Active Falling Words</div>
+            </div>
+          </div>
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h2 style="font-size: 1.15rem; font-weight: 700;">Created Love Books</h2>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Book Name</th>
+                    <th>Book ID</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="booksTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. ANIMATION -->
+        <div class="tab-panel" id="tab-animation">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h2 style="font-size: 1.15rem; font-weight: 700;">Speed & Performance Controls</h2>
+            </div>
+            <form id="animationForm">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label">Falling Speed</label>
+                  <div class="slider-row">
+                    <input type="range" id="animSpeed" class="slider-input" min="0.4" max="2.5" step="0.1">
+                    <span class="slider-badge" id="animSpeedVal">1.0x</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Density (Number of Items)</label>
+                  <div class="slider-row">
+                    <input type="range" id="animDensity" class="slider-input" min="10" max="45" step="1">
+                    <span class="slider-badge" id="animDensityVal">25</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Min Font Size (px)</label>
+                  <div class="slider-row">
+                    <input type="range" id="animMinFont" class="slider-input" min="12" max="20" step="1">
+                    <span class="slider-badge" id="animMinFontVal">14px</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Max Font Size (px)</label>
+                  <div class="slider-row">
+                    <input type="range" id="animMaxFont" class="slider-input" min="20" max="38" step="1">
+                    <span class="slider-badge" id="animMaxFontVal">24px</span>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn-admin-pri" style="margin-top: 8px;">Save Settings</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 4. THEME -->
+        <div class="tab-panel" id="tab-theme">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h2 style="font-size: 1.15rem; font-weight: 700;">Color Themes</h2>
+            </div>
+            <div class="theme-presets">
+              <button type="button" class="theme-preset-btn" onclick="applyPreset('crimson')">🌹 Crimson</button>
+              <button type="button" class="theme-preset-btn" onclick="applyPreset('purple')">🔮 Violet</button>
+              <button type="button" class="theme-preset-btn" onclick="applyPreset('rosegold')">✨ Rose Gold</button>
+              <button type="button" class="theme-preset-btn" onclick="applyPreset('starlight')">🌌 Starlight</button>
+            </div>
+            <form id="themeForm" class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Background Center</label>
+                <input type="color" id="thmBgStart" class="form-input" style="height:42px;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Background Outer</label>
+                <input type="color" id="thmBgEnd" class="form-input" style="height:42px;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Heart Color</label>
+                <input type="color" id="thmHeart" class="form-input" style="height:42px;">
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <button type="submit" class="btn-admin-pri">Save Theme Colors</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- 5. BACKUP -->
+        <div class="tab-panel" id="tab-system">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h2 style="font-size: 1.15rem; font-weight: 700;">System Storage</h2>
+            </div>
+            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.5; margin-bottom: 16px;">
+              All data is saved in LocalStorage. You can backup or reset defaults anytime.
+            </p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn-admin-sec" id="exportBtn">📥 Export JSON</button>
+              <button class="btn-admin-danger" id="resetDefaultBtn">⚠️ Reset to Defaults</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Ready Link Modal -->
+  <div class="modal-overlay" id="bookReadyModal">
+    <div class="ready-modal-box">
+      <div style="font-size: 2.6rem; margin-bottom: 6px;">🎉💌</div>
+      <h2 style="font-family: 'Cinzel', serif; font-size: 1.4rem; color: #ff99bb; margin-bottom: 4px;">Your Love Book Is Ready ❤️</h2>
+      <p style="color: #94a3b8; font-size: 0.82rem;">Share this unique link:</p>
+      
+      <div class="link-display-box">
+        <input type="text" id="shareableLinkInput" class="link-display-input" readonly>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn-admin-pri" id="copyBookLinkBtn" style="width: 100%;">COPY LINK 🔗</button>
+        <div style="display: flex; gap: 8px;">
+          <a href="#" target="_blank" class="btn-admin-sec" id="openBookLinkBtn" style="flex: 1; text-align: center;">OPEN BOOK ❤️</a>
+          <button class="btn-admin-sec" id="closeReadyModalBtn" style="flex: 1;">CREATE NEW ✨</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toastMessage">✨ Action Completed!</div>
+
+  <!-- ==========================================================================
+       3. ZERO-GARBAGE ULTRA FAST JAVASCRIPT ENGINE
+       ========================================================================== -->
+  <script>
+    /* Admin Credentials */
+    const ADMIN_CREDENTIALS = { username: "admin", password: "love123" };
+
+    const DRAFT_KEY = 'FALLING_LOVE_ZERO_LAG_DRAFT';
+    const BOOKS_KEY = 'FALLING_LOVE_ZERO_LAG_BOOKS';
+    const AUTH_KEY  = 'FALLING_LOVE_ZERO_LAG_AUTH';
+
+    const DEFAULT_CONFIG = {
+      name: "Special Love Rain ❤️",
+      theme: {
+        bgGradientStart: "#0e0414",
+        bgGradientEnd: "#26072b",
+        primaryColor: "#ff3377",
+        heartColor: "#ff2a6d"
+      },
+      animation: {
+        speed: 1.0,
+        density: 25,
+        minFontSize: 14,
+        maxFontSize: 24
+      },
+      messages: [
+        { id: "1", text: "I Love You ❤️", active: true, size: 22, color: "#ff4d88" },
+        { id: "2", text: "You Are My Everything ✨", active: true, size: 18, color: "#ffffff" },
+        { id: "3", text: "Forever With You 💍", active: true, size: 20, color: "#ff80df" },
+        { id: "4", text: "My Beautiful Angel 🌸", active: true, size: 17, color: "#ffd1dc" },
+        { id: "5", text: "Always Yours 💖", active: true, size: 19, color: "#ff66a3" },
+        { id: "6", text: "Miss You 🥰", active: true, size: 16, color: "#ffffff" },
+        { id: "7", text: "You Make My Heart Smile 💫", active: true, size: 18, color: "#ff99c8" },
+        { id: "8", text: "Love You More ❤️", active: true, size: 20, color: "#ff3366" },
+        { id: "9", text: "My Soulmate 🌹", active: true, size: 19, color: "#ff5050" }
+      ]
+    };
+
+    const BookStorage = {
+      getAll() {
+        try {
+          const raw = localStorage.getItem(BOOKS_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch(e) { return {}; }
+      },
+      save(id, data) {
+        const b = this.getAll();
+        b[id] = data;
+        localStorage.setItem(BOOKS_KEY, JSON.stringify(b));
+      },
+      delete(id) {
+        const b = this.getAll();
+        delete b[id];
+        localStorage.setItem(BOOKS_KEY, JSON.stringify(b));
+      },
+      generateId() {
+        const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let r = "BOOK-";
+        for(let i=0; i<6; i++) r += c.charAt(Math.floor(Math.random()*c.length));
+        return r;
+      }
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookParam = urlParams.get('book');
+    const isRecipientMode = !!bookParam;
+
+    let activeConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+
+    if (isRecipientMode) {
+      document.getElementById('openAdminBtn').style.display = 'none';
+      const repo = BookStorage.getAll();
+      const target = repo[bookParam];
+      if (target && target.config) {
+        activeConfig = target.config;
+      } else {
+        document.getElementById('notFoundScreen').classList.add('active');
+      }
+    } else {
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          activeConfig = { ...DEFAULT_CONFIG, ...parsed, theme: {...DEFAULT_CONFIG.theme, ...parsed.theme}, animation: {...DEFAULT_CONFIG.animation, ...parsed.animation} };
+        }
+      } catch (e) {}
+    }
+
+    function saveDraft() {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(activeConfig));
+      showToast("✨ Settings updated!");
+      applyThemeColors();
+      renderMessagesTable();
+      renderBooksTable();
+      syncPools();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function applyThemeColors() {
+      const root = document.documentElement;
+      root.style.setProperty('--bg-start', activeConfig.theme.bgGradientStart);
+      root.style.setProperty('--bg-end', activeConfig.theme.bgGradientEnd);
+      root.style.setProperty('--primary-color', activeConfig.theme.primaryColor);
+      root.style.setProperty('--heart-color', activeConfig.theme.heartColor);
+    }
+    applyThemeColors();
+
+    /* ==========================================================================
+       HIGH PERFORMANCE ZERO-ALLOCATION ENGINE
+       ========================================================================== */
+    const canvas = document.getElementById('loveCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+    let width = 0, height = 0;
+
+    function resizeCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      // Fixed 1:1 crisp scale prevents mobile GPU lag
+      canvas.width = width;
+      canvas.height = height;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const fallingItems = [];
+
+    class FastFallingItem {
+      constructor() { this.reset(true); }
+      reset(initial = false) {
+        const list = (activeConfig.messages || []).filter(m => m.active);
+        const item = list.length > 0 ? list[Math.floor(Math.random() * list.length)] : { text: "❤️", size: 20, color: "#ff3366" };
+        this.text = item.text;
+        this.color = item.color || "#ffffff";
+        this.size = Math.floor(activeConfig.animation.minFontSize + Math.random() * (activeConfig.animation.maxFontSize - activeConfig.animation.minFontSize));
+        this.fontStr = `600 ${this.size}px 'Plus Jakarta Sans', sans-serif`;
+        this.x = Math.random() * width;
+        this.y = initial ? Math.random() * height : -20 - Math.random() * 40;
+        this.speed = (0.9 + Math.random() * 1.3) * (activeConfig.animation.speed || 1.0);
+        this.sway = Math.random() * 6.28;
+        this.swaySpeed = 0.02 + Math.random() * 0.02;
+        this.swayWidth = 0.5 + Math.random() * 0.5;
+      }
+      update() {
+        this.y += this.speed;
+        this.sway += this.swaySpeed;
+        this.x += Math.sin(this.sway) * this.swayWidth;
+        if (this.y > height + 25) this.reset(false);
+      }
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.font = this.fontStr;
+        ctx.fillText(this.text, this.x, this.y);
+      }
+    }
+
+    /* Fixed Pre-allocated Burst Heart Pool (Zero GC Lag on continuous taps) */
+    const MAX_BURSTS = 40;
+    const burstPool = [];
+    const burstSymbols = ['❤️', '💖', '✨', '💕', '🌸'];
+
+    for (let i = 0; i < MAX_BURSTS; i++) {
+      burstPool.push({
+        active: false,
+        x: 0, y: 0,
+        vx: 0, vy: 0,
+        life: 0,
+        size: 16,
+        text: '❤️'
+      });
+    }
+
+    let burstPoolIdx = 0;
+    function spawnBurst(x, y) {
+      for (let i = 0; i < 3; i++) {
+        const p = burstPool[burstPoolIdx];
+        burstPoolIdx = (burstPoolIdx + 1) % MAX_BURSTS;
+        p.active = true;
+        p.x = x;
+        p.y = y;
+        const angle = Math.random() * 6.28;
+        const speed = 2 + Math.random() * 3.5;
+        p.vx = Math.cos(angle) * speed;
+        p.vy = Math.sin(angle) * speed - 1.2;
+        p.life = 1.0;
+        p.size = 14 + Math.floor(Math.random() * 8);
+        p.text = burstSymbols[Math.floor(Math.random() * burstSymbols.length)];
+      }
+    }
+
+    function syncPools() {
+      const isMobile = width < 768;
+      const targetCount = isMobile ? Math.min(activeConfig.animation.density, 18) : activeConfig.animation.density;
+      while (fallingItems.length < targetCount) fallingItems.push(new FastFallingItem());
+      if (fallingItems.length > targetCount) fallingItems.length = targetCount;
+    }
+    syncPools();
+
+    /* Ultra Fast 60/120 FPS Loop */
+    function renderLoop() {
+      // Direct fast fill clear
+      ctx.fillStyle = activeConfig.theme.bgGradientStart || "#0e0414";
+      ctx.fillRect(0, 0, width, height);
+
+      // 1. Draw Falling Text
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let i = 0; i < fallingItems.length; i++) {
+        const item = fallingItems[i];
+        item.update();
+        item.draw();
+      }
+
+      // 2. Draw Burst Pool
+      for (let i = 0; i < MAX_BURSTS; i++) {
+        const p = burstPool[i];
+        if (!p.active) continue;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.08;
+        p.life -= 0.025;
+        if (p.life <= 0) {
+          p.active = false;
+        } else {
+          ctx.font = `${p.size}px 'Plus Jakarta Sans', sans-serif`;
+          ctx.fillStyle = activeConfig.theme.heartColor;
+          ctx.fillText(p.text, p.x, p.y);
+        }
+      }
+
+      requestAnimationFrame(renderLoop);
+    }
+    requestAnimationFrame(renderLoop);
+
+    /* Fast Pointer Tap (Lag-Free) */
+    window.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('#adminWrapper') || e.target.closest('.login-modal-overlay') || e.target.closest('#openAdminBtn')) return;
+      spawnBurst(e.clientX, e.clientY);
+    });
+
+    /* ==========================================================================
+       ADMIN CONTROLS
+       ========================================================================== */
+    const adminWrapper = document.getElementById('adminWrapper');
+    const loginModal = document.getElementById('loginModal');
+    const openAdminBtn = document.getElementById('openAdminBtn');
+
+    openAdminBtn.addEventListener('click', () => {
+      if (sessionStorage.getItem(AUTH_KEY) === 'true') {
+        adminWrapper.classList.add('active');
+        populateAdminValues();
+      } else {
+        loginModal.classList.add('active');
+      }
+    });
+
+    document.getElementById('closeLoginBtn').addEventListener('click', () => loginModal.classList.remove('active'));
+    document.getElementById('closeAdminViewBtn').addEventListener('click', () => adminWrapper.classList.remove('active'));
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = document.getElementById('adminUser').value.trim();
+      const p = document.getElementById('adminPass').value.trim();
+      if (u === ADMIN_CREDENTIALS.username && p === ADMIN_CREDENTIALS.password) {
+        sessionStorage.setItem(AUTH_KEY, 'true');
+        loginModal.classList.remove('active');
+        adminWrapper.classList.add('active');
+        populateAdminValues();
+        showToast("Welcome Admin!");
+      } else {
+        alert("Invalid Username or Password!");
+      }
+    });
+
+    document.getElementById('logoutAdminBtn').addEventListener('click', () => {
+      sessionStorage.removeItem(AUTH_KEY);
+      adminWrapper.classList.remove('active');
+      showToast("Logged out");
+    });
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabPanels.forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    function populateAdminValues() {
+      document.getElementById('animSpeed').value = activeConfig.animation.speed;
+      document.getElementById('animSpeedVal').innerText = activeConfig.animation.speed + 'x';
+      document.getElementById('animDensity').value = activeConfig.animation.density;
+      document.getElementById('animDensityVal').innerText = activeConfig.animation.density;
+      document.getElementById('animMinFont').value = activeConfig.animation.minFontSize;
+      document.getElementById('animMinFontVal').innerText = activeConfig.animation.minFontSize + 'px';
+      document.getElementById('animMaxFont').value = activeConfig.animation.maxFontSize;
+      document.getElementById('animMaxFontVal').innerText = activeConfig.animation.maxFontSize + 'px';
+
+      document.getElementById('thmBgStart').value = activeConfig.theme.bgGradientStart;
+      document.getElementById('thmBgEnd').value = activeConfig.theme.bgGradientEnd;
+      document.getElementById('thmHeart').value = activeConfig.theme.heartColor;
+
+      renderMessagesTable();
+      renderBooksTable();
+    }
+
+    const bindRange = (id, badgeId, suffix = '') => {
+      const input = document.getElementById(id);
+      const badge = document.getElementById(badgeId);
+      input.addEventListener('input', () => { badge.innerText = input.value + suffix; });
+    };
+    bindRange('animSpeed', 'animSpeedVal', 'x');
+    bindRange('animDensity', 'animDensityVal');
+    bindRange('animMinFont', 'animMinFontVal', 'px');
+    bindRange('animMaxFont', 'animMaxFontVal', 'px');
+
+    function renderMessagesTable() {
+      const tbody = document.getElementById('messageTableBody');
+      tbody.innerHTML = '';
+      activeConfig.messages.forEach(msg => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <label class="switch">
+              <input type="checkbox" ${msg.active ? 'checked' : ''} onchange="toggleMsg('${msg.id}')">
+              <span class="slider"></span>
+            </label>
+          </td>
+          <td style="color: ${msg.color || '#fff'}; font-weight: 600;">${escapeHtml(msg.text)}</td>
+          <td>${msg.size || 20}px</td>
+          <td><button class="btn-sm btn-sm-delete" onclick="deleteMsg('${msg.id}')">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('statActiveMsg').innerText = activeConfig.messages.filter(m => m.active).length;
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    window.toggleMsg = function(id) {
+      const t = activeConfig.messages.find(m => m.id === id);
+      if (t) { t.active = !t.active; saveDraft(); }
+    };
+
+    window.deleteMsg = function(id) {
+      if (confirm("Delete message?")) {
+        activeConfig.messages = activeConfig.messages.filter(m => m.id !== id);
+        saveDraft();
+      }
+    };
+
+    document.getElementById('addMessageForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = document.getElementById('newMsgText').value.trim();
+      const size = parseInt(document.getElementById('newMsgSize').value) || 20;
+      const color = document.getElementById('newMsgColor').value;
+      if (!text) return;
+      activeConfig.messages.unshift({ id: Date.now().toString(), text, size, color, active: true });
+      document.getElementById('newMsgText').value = '';
+      saveDraft();
+    });
+
+    document.getElementById('animationForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      activeConfig.animation.speed = parseFloat(document.getElementById('animSpeed').value);
+      activeConfig.animation.density = parseInt(document.getElementById('animDensity').value);
+      activeConfig.animation.minFontSize = parseInt(document.getElementById('animMinFont').value);
+      activeConfig.animation.maxFontSize = parseInt(document.getElementById('animMaxFont').value);
+      saveDraft();
+    });
+
+    document.getElementById('themeForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      activeConfig.theme.bgGradientStart = document.getElementById('thmBgStart').value;
+      activeConfig.theme.bgGradientEnd = document.getElementById('thmBgEnd').value;
+      activeConfig.theme.heartColor = document.getElementById('thmHeart').value;
+      saveDraft();
+    });
+
+    window.applyPreset = function(preset) {
+      if (preset === 'crimson') {
+        activeConfig.theme.bgGradientStart = "#0e0414";
+        activeConfig.theme.bgGradientEnd = "#26072b";
+        activeConfig.theme.heartColor = "#ff2a6d";
+      } else if (preset === 'purple') {
+        activeConfig.theme.bgGradientStart = "#090214";
+        activeConfig.theme.bgGradientEnd = "#1e0836";
+        activeConfig.theme.heartColor = "#f43f5e";
+      } else if (preset === 'rosegold') {
+        activeConfig.theme.bgGradientStart = "#12080a";
+        activeConfig.theme.bgGradientEnd = "#33161a";
+        activeConfig.theme.heartColor = "#fda4af";
+      } else if (preset === 'starlight') {
+        activeConfig.theme.bgGradientStart = "#020617";
+        activeConfig.theme.bgGradientEnd = "#0f172a";
+        activeConfig.theme.heartColor = "#f43f5e";
+      }
+      populateAdminValues();
+      saveDraft();
+    };
+
+    /* Shareable Love Book */
+    const readyModal = document.getElementById('bookReadyModal');
+    const shareableInput = document.getElementById('shareableLinkInput');
+    const copyBookBtn = document.getElementById('copyBookLinkBtn');
+    const openBookBtn = document.getElementById('openBookLinkBtn');
+    const closeReadyBtn = document.getElementById('closeReadyModalBtn');
+
+    function buildUrl(bookId) {
+      return `${window.location.origin}${window.location.pathname}?book=${bookId}`;
+    }
+
+    document.getElementById('triggerCreateBookBtn').addEventListener('click', () => {
+      const bookId = BookStorage.generateId();
+      const record = {
+        id: bookId,
+        name: activeConfig.name || "Falling Love Rain",
+        createdAt: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+        config: JSON.parse(JSON.stringify(activeConfig))
+      };
+
+      BookStorage.save(bookId, record);
+      const generatedUrl = buildUrl(bookId);
+      shareableInput.value = generatedUrl;
+      openBookBtn.href = generatedUrl;
+
+      readyModal.classList.add('active');
+      renderBooksTable();
+    });
+
+    copyBookBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(shareableInput.value).then(() => {
+        showToast("Love Book Link Copied ❤️");
+      });
+    });
+
+    closeReadyBtn.addEventListener('click', () => readyModal.classList.remove('active'));
+
+    function renderBooksTable() {
+      const books = BookStorage.getAll();
+      const tbody = document.getElementById('booksTableBody');
+      tbody.innerHTML = '';
+      const list = Object.values(books);
+      document.getElementById('statTotalBooks').innerText = list.length;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: #94a3b8; padding: 16px;">No Love Books created yet.</td></tr>`;
+        return;
+      }
+
+      list.reverse().forEach(b => {
+        const bookUrl = buildUrl(b.id);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight: 600; color: #fff;">${escapeHtml(b.name || 'Untitled')}</td>
+          <td><span class="badge-id">${b.id}</span></td>
+          <td style="color: #94a3b8;">${b.createdAt || 'Recent'}</td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn-sm btn-sm-copy" onclick="copyLink('${bookUrl}')">Copy 🔗</button>
+              <a href="${bookUrl}" target="_blank" class="btn-sm btn-admin-sec" style="padding: 4px 8px;">Open ↗</a>
+              <button class="btn-sm btn-sm-delete" onclick="deleteBookRecord('${b.id}')">Delete 🗑️</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.copyLink = function(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast("Love Book Link Copied ❤️");
+      });
+    };
+
+    window.deleteBookRecord = function(id) {
+      if (confirm(`Delete book ${id}?`)) {
+        BookStorage.delete(id);
+        renderBooksTable();
+        showToast("Book deleted.");
+      }
+    };
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const data = { draft: activeConfig, books: BookStorage.getAll() };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = "love_letters_backup.json";
+      a.click();
+    });
+
+    document.getElementById('resetDefaultBtn').addEventListener('click', () => {
+      if (confirm("Reset current settings to defaults?")) {
+        activeConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+        saveDraft();
+        populateAdminValues();
+      }
+    });
+  </script>
+</body>
+</html>
